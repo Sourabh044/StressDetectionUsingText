@@ -1,11 +1,12 @@
 # %%
 import pandas as pd
 import numpy as np
-data = pd.read_csv("stress.csv")
+data = pd.read_csv("preprocessedNP.csv")
 # print(data.head())
+data.columns = ['text', 'label']
 
 # %%
-# data.head
+data.head()
 
 # %%
 # print(data.isnull().sum())
@@ -30,11 +31,14 @@ def clean(text):
     text = [word for word in text.split(' ') if word not in stopword]
     text=" ".join(text)
     text = [stemmer.stem(word) for word in text.split(' ')]
+    text=" ".join(text)
+    return text
+data["text"] = data["text"].apply(clean)
 
 # %%
 data["label"] = data["label"].map({0: "No Stress", 1: "Stress"})
 data = data[["text", "label"]]
-# print(data.head())
+print(data.head())
 
 # %%
 from sklearn.feature_extraction.text import CountVectorizer
@@ -45,17 +49,31 @@ y = np.array(data["label"])
 
 cv = CountVectorizer()
 X = cv.fit_transform(x)
-xtrain, xtest, ytrain, ytest = train_test_split(X, y, 
-                                                test_size=0.33, 
-                                                random_state=42)
+xtrain, xtest, ytrain, ytest = train_test_split(X, y,test_size=0.33,random_state=42)
 
 # %%
 from sklearn.naive_bayes import BernoulliNB
+from sklearn import metrics
 model = BernoulliNB()
 model.fit(xtrain, ytrain)
+# print("Accuracy of Logistic Regression model is:",
+# metrics.accuracy_score(ytest, ytrain)*100)
 
 # %%
 user = input("Enter a Text: ")
 data = cv.transform([user]).toarray()
 output = model.predict(data)
 print(output)
+
+# %%
+model.score(xtest,ytest)*100
+
+# %%
+from sklearn.metrics import classification_report
+z = model.predict(xtest)
+print(classification_report(ytest, z))
+
+# %%
+
+
+
